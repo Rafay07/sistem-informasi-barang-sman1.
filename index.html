@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Informasi Barang - SMAN 1 Magetan</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        smanBlue: '#1E88E5',
+                        smanRed: '#D32F2F',
+                        smanYellow: '#FBC02D',
+                        smanDark: '#121212',
+                        darkCard: '#1E1E1E',
+                        darkBorder: '#2D2D2D'
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; -webkit-tap-highlight-color: transparent; }
+        .active-nav { color: #FBC02D; font-weight: 800; border-bottom: 3px solid #FBC02D; }
+        .page-transition { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #1E88E5; }
+
+        /* Focus Outline Fix */
+        *:focus-visible { outline: 2px solid #FBC02D; outline-offset: 2px; }
+
+        /* Modal Overlay Background Blur */
+        .modal-blur { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        
+        /* Loading Spinner */
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-black text-smanDark dark:text-gray-200 flex flex-col min-h-screen">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-smanBlue dark:bg-blue-900 text-white shadow-xl sticky top-0 z-[100] transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16 md:h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer group" onclick="navigate('home')">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-C0IDYx7vtd5_vIaL0CGaWwVgFDD2TJsMvQ&s" alt="Logo SMAN 1 Magetan" class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white p-0.5 shadow-md group-hover:scale-110 transition-transform">
+                    <div class="flex flex-col">
+                        <span class="font-extrabold text-sm md:text-lg leading-tight tracking-tight uppercase">SMAN 1 MAGETAN</span>
+                        <span class="text-[8px] md:text-[10px] text-blue-100 uppercase tracking-widest font-bold opacity-80">Sistem Informasi Barang</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <button onclick="navigate('home')" id="nav-home" class="py-2 hover:text-smanYellow transition-all text-sm font-bold tracking-wide">Beranda</button>
+                    <button onclick="navigate('list')" id="nav-list" class="py-2 hover:text-smanYellow transition-all text-sm font-bold tracking-wide">Daftar Barang</button>
+                    <button onclick="navigate('report')" id="nav-report" class="py-2 hover:text-smanYellow transition-all text-sm font-bold tracking-wide">Lapor / Titip</button>
+                    
+                    <div class="h-6 w-[1px] bg-blue-400 opacity-50 mx-2"></div>
+                    
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 w-10 h-10 rounded-xl bg-blue-800/50 hover:bg-blue-700 transition-all flex items-center justify-center text-smanYellow border border-blue-400/20" title="Ganti Tema">
+                        <i id="theme-icon" class="fas fa-moon"></i>
+                    </button>
+
+                    <button onclick="navigate('admin')" id="nav-admin" class="flex items-center gap-2 py-2 px-5 bg-blue-900/50 border border-blue-300/30 rounded-xl hover:bg-smanYellow hover:text-smanDark transition-all text-xs font-black uppercase tracking-tighter shadow-inner">
+                        <i class="fas fa-lock text-[10px]"></i> Admin
+                    </button>
+                </div>
+
+                <!-- Mobile Header Actions -->
+                <div class="flex md:hidden items-center gap-2">
+                    <button onclick="toggleTheme()" class="p-2 w-10 h-10 rounded-xl bg-blue-800/50 flex items-center justify-center text-smanYellow border border-blue-400/20">
+                        <i id="theme-icon-mobile" class="fas fa-moon"></i>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="text-white p-2 hover:bg-blue-600 rounded-lg transition-colors">
+                        <i class="fas fa-bars-staggered text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-blue-800 dark:bg-slate-900 border-t border-blue-600 dark:border-slate-800 shadow-2xl animate-in slide-in-from-top duration-300">
+            <div class="flex flex-col p-3 space-y-1">
+                <button onclick="navigate('home')" class="p-4 text-left rounded-xl hover:bg-blue-700 dark:hover:bg-slate-800 active:bg-blue-900 flex items-center gap-4 text-sm font-bold"><i class="fas fa-home w-5 opacity-70"></i> Beranda</button>
+                <button onclick="navigate('list')" class="p-4 text-left rounded-xl hover:bg-blue-700 dark:hover:bg-slate-800 active:bg-blue-900 flex items-center gap-4 text-sm font-bold"><i class="fas fa-list-ul w-5 opacity-70"></i> Daftar Barang</button>
+                <button onclick="navigate('report')" class="p-4 text-left rounded-xl hover:bg-blue-700 dark:hover:bg-slate-800 active:bg-blue-900 flex items-center gap-4 text-sm font-bold"><i class="fas fa-circle-plus w-5 opacity-70"></i> Lapor / Titip</button>
+                <div class="h-[1px] bg-blue-600 dark:bg-slate-800 my-2"></div>
+                <button onclick="navigate('admin')" class="p-4 text-left rounded-xl bg-blue-950/50 dark:bg-black/50 text-smanYellow font-black flex items-center gap-4 text-sm border border-blue-500/30 uppercase tracking-widest"><i class="fas fa-shield-halved w-5"></i> Admin Area</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 py-8 page-transition">
+        <!-- JS Content -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard text-gray-400 py-16 mt-auto text-sm border-t border-slate-100 dark:border-darkBorder">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                <div class="text-center md:text-left space-y-4">
+                    <h3 class="font-black text-smanDark dark:text-white tracking-[0.2em] uppercase text-lg">SMAN 1 MAGETAN</h3>
+                    <div class="h-1 w-12 bg-smanBlue mx-auto md:mx-0"></div>
+                    <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-sm mx-auto md:mx-0 font-medium">
+                        Jl. Monginsidi No. 24, Magetan, Jawa Timur. Platform digital untuk transparansi manajemen inventaris sekolah.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col items-center md:items-end space-y-4">
+                    <span class="text-[10px] uppercase tracking-[0.4em] text-gray-300 dark:text-gray-700 font-black">Dikembangkan Oleh</span>
+                    <span class="text-2xl font-black text-smanDark dark:text-white tracking-tight">Akhram Rafay Fatih Nizzar</span>
+                    <span class="text-xs font-bold text-smanYellow bg-smanYellow/10 px-5 py-2 rounded-full border border-smanYellow/20">Kelas XII-8</span>
+                </div>
+            </div>
+            
+            <div class="mt-16 pt-8 border-t border-slate-100 dark:border-darkBorder text-center">
+                <p class="text-[10px] text-gray-400 dark:text-gray-600 font-black tracking-[0.4em] uppercase">
+                    &copy; 2026 SMAN 1 MAGETAN. SELURUH HAK CIPTA DILINDUNGI.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODALS -->
+
+    <!-- Item Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/60 modal-blur hidden flex justify-center items-center z-[1000] p-4 transition-all duration-300 opacity-0">
+        <div class="bg-white dark:bg-darkCard rounded-4xl w-full max-w-xl overflow-hidden shadow-2xl transform scale-95 transition-all duration-300" id="detail-container">
+            <div id="detail-header" class="p-8 text-white relative">
+                <button onclick="closeDetail()" class="absolute top-6 right-6 w-10 h-10 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div id="detail-badge" class="px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase inline-block mb-4"></div>
+                <h3 id="detail-title" class="text-3xl font-black tracking-tight mb-2"></h3>
+                <div class="flex items-center gap-4 text-xs font-bold opacity-80">
+                    <span><i class="fas fa-calendar mr-1.5"></i> <span id="detail-date"></span></span>
+                    <span><i class="fas fa-map-marker-alt mr-1.5"></i> <span id="detail-location"></span></span>
+                </div>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Deskripsi & Ciri-ciri</h4>
+                    <p id="detail-desc" class="text-slate-600 dark:text-gray-300 leading-relaxed font-medium bg-slate-50 dark:bg-black/20 p-5 rounded-3xl border border-slate-100 dark:border-darkBorder"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <h4 class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Kontak / PIC</h4>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-smanBlue rounded-xl flex items-center justify-center"><i class="fas fa-user"></i></div>
+                            <span id="detail-contact" class="font-bold text-smanDark dark:text-white"></span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Status Saat Ini</h4>
+                        <div id="detail-status-pill" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black text-white uppercase tracking-wider"></div>
+                    </div>
+                </div>
+                <div class="pt-6 border-t border-slate-100 dark:border-darkBorder flex justify-center">
+                    <p class="text-[10px] text-slate-400 font-bold italic text-center">Silakan hubungi petugas piket atau nomor di atas untuk pengambilan/konfirmasi barang.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (Admin) -->
+    <div id="login-modal" class="fixed inset-0 bg-smanDark/90 modal-blur hidden flex justify-center items-center z-[999] p-4 transition-all duration-300">
+        <div class="bg-white dark:bg-darkCard p-12 rounded-4xl shadow-2xl w-full max-w-sm text-center border border-white/10 transform scale-90 opacity-0 transition-all duration-300" id="login-container">
+            <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/30 text-smanBlue rounded-3xl flex items-center justify-center mx-auto mb-8 text-3xl shadow-inner">
+                <i class="fas fa-key"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tighter">Area Terbatas</h3>
+            <p class="text-[10px] text-slate-400 mb-10 uppercase tracking-widest font-black">Khusus Petugas Barang SMANSA</p>
+            <input type="password" id="admin-pass" placeholder="Password Admin" class="w-full p-5 bg-slate-50 dark:bg-black/50 border-none rounded-2xl mb-6 text-center text-lg tracking-[0.4em] focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 outline-none transition-all dark:text-white">
+            <button onclick="checkLogin()" class="w-full py-5 bg-smanBlue text-white font-black rounded-2xl shadow-2xl shadow-blue-100 dark:shadow-none hover:translate-y-[-2px] active:scale-95 transition-all uppercase tracking-widest text-xs mb-4">Verifikasi</button>
+            <button onclick="closeLoginModal()" class="text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-slate-500 transition-colors">Batal</button>
+        </div>
+    </div>
+
+    <!-- TEMPLATES -->
+
+    <!-- Home Template -->
+    <template id="tpl-home">
+        <div class="space-y-8">
+            <div class="bg-white dark:bg-darkCard rounded-4xl p-12 shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-darkBorder flex flex-col items-center text-center relative overflow-hidden transition-colors">
+                <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 dark:bg-blue-900/10 rounded-full blur-3xl opacity-50"></div>
+                <div class="w-24 h-24 bg-blue-600 rounded-3xl rotate-6 flex items-center justify-center mb-8 text-white shadow-xl shadow-blue-200 dark:shadow-none transition-transform hover:rotate-0">
+                    <i class="fas fa-box-archive text-4xl -rotate-6"></i>
+                </div>
+                <h1 class="text-4xl font-black text-smanDark dark:text-white mb-4 tracking-tighter lg:text-5xl">Digital Barang SMANSA</h1>
+                <p class="text-sm md:text-base text-slate-500 dark:text-gray-400 max-w-lg leading-relaxed font-medium">Solusi cerdas melacak barang hilang, temuan tak bertuan, dan titipan barang dari orang tua siswa.</p>
+                
+                <div class="flex flex-col sm:flex-row gap-5 mt-12 w-full max-w-md">
+                    <button onclick="navigate('report')" class="flex-1 py-5 bg-smanBlue text-white rounded-2xl font-black shadow-xl shadow-blue-200 dark:shadow-none hover:translate-y-[-2px] active:translate-y-0 transition-all flex items-center justify-center gap-3 uppercase tracking-wider text-sm">
+                        <i class="fas fa-plus-circle"></i> Buat Laporan
+                    </button>
+                    <button onclick="navigate('list')" class="flex-1 py-5 bg-white dark:bg-transparent text-smanBlue dark:text-white border-2 border-smanBlue dark:border-blue-900 rounded-2xl font-black hover:bg-slate-50 dark:hover:bg-blue-900/20 active:translate-y-0 transition-all flex items-center justify-center gap-3 uppercase tracking-wider text-sm">
+                        <i class="fas fa-magnifying-glass"></i> Cek Barang
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Stat Card: Hilang -->
+                <div onclick="filterNavigate('hilang')" class="bg-white dark:bg-darkCard p-8 rounded-4xl shadow-sm border border-slate-100 dark:border-darkBorder cursor-pointer hover:border-smanRed hover:shadow-lg transition-all group overflow-hidden">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-smanRed rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-search"></i></div>
+                        <i class="fas fa-chevron-right text-slate-200 dark:text-gray-700 group-hover:text-smanRed transition-colors"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-smanRed uppercase tracking-[0.2em] mb-1">Barang Hilang</p>
+                    <h3 class="text-4xl font-black text-slate-800 dark:text-white" id="count-hilang">0</h3>
+                </div>
+                <!-- Stat Card: Titipan -->
+                <div onclick="filterNavigate('titipan')" class="bg-white dark:bg-darkCard p-8 rounded-4xl shadow-sm border border-slate-100 dark:border-darkBorder cursor-pointer hover:border-smanBlue hover:shadow-lg transition-all group overflow-hidden">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-smanBlue rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-truck-ramp-box"></i></div>
+                        <i class="fas fa-chevron-right text-slate-200 dark:text-gray-700 group-hover:text-smanBlue transition-colors"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-smanBlue uppercase tracking-[0.2em] mb-1">Titipan Orang Tua</p>
+                    <h3 class="text-4xl font-black text-slate-800 dark:text-white" id="count-titipan">0</h3>
+                </div>
+                <!-- Stat Card: Temuan -->
+                <div onclick="filterNavigate('temuan')" class="bg-white dark:bg-darkCard p-8 rounded-4xl shadow-sm border border-slate-100 dark:border-darkBorder cursor-pointer hover:border-smanYellow hover:shadow-lg transition-all group overflow-hidden">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-hand-holding-heart"></i></div>
+                        <i class="fas fa-chevron-right text-slate-200 dark:text-gray-700 group-hover:text-smanYellow transition-colors"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-yellow-600 uppercase tracking-[0.2em] mb-1">Barang Temuan</p>
+                    <h3 class="text-4xl font-black text-slate-800 dark:text-white" id="count-temuan">0</h3>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- List View Template -->
+    <template id="tpl-list">
+        <div class="space-y-6">
+            <div class="bg-white dark:bg-darkCard p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-darkBorder flex flex-col md:flex-row gap-4 items-center">
+                <div class="relative w-full">
+                    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" onkeyup="handleSearch(event)" placeholder="Cari nama barang..." class="w-full pl-14 pr-4 py-4 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-smanBlue transition-all dark:text-white">
+                </div>
+                <select id="filter-category" onchange="renderItems()" class="w-full md:w-64 py-4 px-6 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-bold text-slate-600 dark:text-gray-400 focus:ring-2 focus:ring-smanBlue cursor-pointer">
+                    <option value="all">Semua Kategori</option>
+                    <option value="hilang">Barang Hilang</option>
+                    <option value="temuan">Barang Temuan</option>
+                    <option value="titipan">Titipan Luar</option>
+                </select>
+            </div>
+
+            <div id="items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
+                <!-- Cards -->
+            </div>
+            
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center py-32">
+                <div class="w-32 h-32 bg-slate-50 dark:bg-darkCard rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-magnifying-glass-minus text-5xl text-slate-200 dark:text-gray-700"></i>
+                </div>
+                <p class="font-black text-slate-300 dark:text-gray-700 uppercase tracking-[0.3em] text-sm">Data Kosong</p>
+            </div>
+        </div>
+    </template>
+
+    <!-- Report Template -->
+    <template id="tpl-report">
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white dark:bg-darkCard rounded-4xl shadow-2xl shadow-slate-200 dark:shadow-none overflow-hidden border border-slate-50 dark:border-darkBorder">
+                <div class="bg-smanBlue p-10 text-white flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black tracking-tight">Laporan Baru</h2>
+                        <p class="text-[10px] text-blue-100 mt-1 font-black uppercase tracking-widest opacity-80">SMAN 1 Magetan Inventory System</p>
+                    </div>
+                    <i class="fas fa-file-signature text-5xl opacity-20"></i>
+                </div>
+                
+                <form id="report-form" onsubmit="handleFormSubmit(event)" class="p-10 space-y-10">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center px-1">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em]">Kategori Laporan</label>
+                            <div id="helper-text-container" class="text-[9px] font-black py-1.5 px-4 bg-blue-50 dark:bg-blue-900/30 text-smanBlue rounded-full border border-blue-100 dark:border-blue-900 animate-pulse"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <label class="cursor-pointer group">
+                                <input type="radio" name="type" value="hilang" class="peer hidden" checked onchange="updateFormLabels()">
+                                <div class="p-5 text-center border-2 rounded-3xl text-[10px] font-black border-slate-50 dark:border-black/20 bg-slate-50 dark:bg-black/20 text-slate-400 peer-checked:border-smanRed peer-checked:bg-white dark:peer-checked:bg-red-900/20 peer-checked:text-smanRed transition-all uppercase tracking-widest group-hover:border-red-100">Hilang</div>
+                            </label>
+                            <label class="cursor-pointer group">
+                                <input type="radio" name="type" value="temuan" class="peer hidden" onchange="updateFormLabels()">
+                                <div class="p-5 text-center border-2 rounded-3xl text-[10px] font-black border-slate-50 dark:border-black/20 bg-slate-50 dark:bg-black/20 text-slate-400 peer-checked:border-smanYellow peer-checked:bg-white dark:peer-checked:bg-yellow-900/20 peer-checked:text-yellow-600 transition-all uppercase tracking-widest group-hover:border-yellow-100">Temuan</div>
+                            </label>
+                            <label class="cursor-pointer group">
+                                <input type="radio" name="type" value="titipan" class="peer hidden" onchange="updateFormLabels()">
+                                <div class="p-5 text-center border-2 rounded-3xl text-[10px] font-black border-slate-50 dark:border-black/20 bg-slate-50 dark:bg-black/20 text-slate-400 peer-checked:border-smanBlue peer-checked:bg-white dark:peer-checked:bg-blue-900/20 peer-checked:text-smanBlue transition-all uppercase tracking-widest group-hover:border-blue-100">Titipan</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div class="space-y-3">
+                            <label class="block text-xs font-black text-slate-700 dark:text-gray-300 uppercase" id="lbl-name">Item</label>
+                            <input type="text" name="itemName" required class="w-full p-4 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-medium focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 outline-none transition-all dark:text-white" placeholder="...">
+                        </div>
+                        <div class="space-y-3">
+                            <label class="block text-xs font-black text-slate-700 dark:text-gray-300 uppercase">Waktu</label>
+                            <input type="date" name="date" id="report-date" required class="w-full p-4 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-medium focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 outline-none transition-all dark:text-white">
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-xs font-black text-slate-700 dark:text-gray-300 uppercase" id="lbl-loc">Lokasi</label>
+                        <input type="text" name="location" required class="w-full p-4 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-medium focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 outline-none transition-all dark:text-white" placeholder="...">
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-xs font-black text-slate-700 dark:text-gray-300 uppercase">Detail Tambahan</label>
+                        <textarea name="description" rows="3" class="w-full p-4 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-medium focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 outline-none transition-all resize-none dark:text-white" placeholder="Ciri-ciri barang..."></textarea>
+                    </div>
+
+                    <div class="pt-8 border-t border-slate-100 dark:border-darkBorder space-y-3">
+                        <label class="block text-xs font-black text-slate-700 dark:text-gray-300 uppercase" id="lbl-contact">Kontak Pelapor</label>
+                        <input type="text" name="contact" required class="w-full p-4 bg-slate-50 dark:bg-black/50 border-none rounded-2xl text-sm font-medium focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 outline-none transition-all dark:text-white" placeholder="Nama / No HP">
+                    </div>
+
+                    <button id="btn-submit" type="submit" class="w-full py-6 bg-smanBlue text-white font-black rounded-3xl shadow-2xl shadow-blue-100 dark:shadow-none hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-4 text-sm uppercase tracking-widest">
+                        <span>Kirim Laporan</span> <i class="fas fa-chevron-right"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- Admin View Template -->
+    <template id="tpl-admin">
+        <div class="space-y-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-6 bg-white dark:bg-darkCard p-8 rounded-4xl border border-slate-100 dark:border-darkBorder shadow-sm">
+                <div class="flex items-center gap-5">
+                    <div class="w-16 h-16 bg-blue-600 text-white rounded-3xl flex items-center justify-center text-2xl shadow-xl shadow-blue-100 dark:shadow-none">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tighter">Panel Kontrol</h2>
+                        <p class="text-xs text-slate-400 dark:text-gray-500 font-bold uppercase tracking-widest">Akses Admin Terverifikasi</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 w-full sm:w-auto">
+                    <button onclick="fetchLatestData()" class="flex-1 sm:flex-none px-6 py-4 bg-slate-100 dark:bg-darkBorder text-slate-600 dark:text-gray-300 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-smanBlue hover:text-white transition-all">Refresh</button>
+                    <button onclick="logoutAdmin()" class="flex-1 sm:flex-none px-8 py-4 bg-red-50 dark:bg-red-900/20 text-smanRed rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-smanRed hover:text-white transition-all shadow-sm">Logout</button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-darkCard rounded-4xl shadow-sm border border-slate-100 dark:border-darkBorder overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-black/30 text-slate-400 dark:text-gray-500 font-black uppercase text-[10px] tracking-[0.2em]">
+                                <th class="px-10 py-6">Informasi Item</th>
+                                <th class="px-10 py-6">Kategori</th>
+                                <th class="px-10 py-6 text-center">Status Barang</th>
+                                <th class="px-10 py-6 text-right">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-slate-50 dark:divide-darkBorder">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- SCRIPTS -->
+    <script>
+        // Apps Script Configuration
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVYcm3Fr4jS_Un_DkhmD_noWGCBfhdpRULnrL2vxSF5ptQyuGYXTyokRz43ozXMIHe/exec";
+
+        // Global State
+        let items = [];
+        let isAdmin = false;
+        let isDarkMode = localStorage.getItem('sman_theme') === 'dark';
+
+        // Initialization
+        window.onload = () => {
+            applyTheme();
+            fetchLatestData();
+            navigate('home');
+        };
+
+        // Fetch Data from Apps Script
+        async function fetchLatestData() {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+                
+                if (Array.isArray(data)) {
+                    items = data;
+                    // Update stats if we are at home
+                    if (document.getElementById('count-hilang')) updateDashboardStats();
+                    // Update list if we are at list
+                    if (document.getElementById('items-grid')) renderItems();
+                }
+            } catch (error) {
+                console.error("Gagal memuat data dari spreadsheet:", error);
+            }
+        }
+
+        // Theme Logic
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            applyTheme();
+            localStorage.setItem('sman_theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        function applyTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeIconMobile = document.getElementById('theme-icon-mobile');
+
+            if (isDarkMode) {
+                html.classList.add('dark');
+                if (themeIcon) themeIcon.className = 'fas fa-sun';
+                if (themeIconMobile) themeIconMobile.className = 'fas fa-sun';
+            } else {
+                html.classList.remove('dark');
+                if (themeIcon) themeIcon.className = 'fas fa-moon';
+                if (themeIconMobile) themeIconMobile.className = 'fas fa-moon';
+            }
+        }
+
+        // Navigation
+        function navigate(pageId) {
+            document.getElementById('mobile-menu').classList.add('hidden');
+            if(pageId === 'admin' && !isAdmin) { openLoginModal(); return; }
+
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
+            const btn = document.getElementById(`nav-${pageId}`);
+            if(btn) btn.classList.add('active-nav');
+
+            const main = document.getElementById('main-content');
+            const template = document.getElementById(`tpl-${pageId}`);
+            if(!template) return;
+
+            main.innerHTML = '';
+            main.appendChild(template.content.cloneNode(true));
+
+            if(pageId === 'home') updateDashboardStats();
+            if(pageId === 'list') renderItems();
+            if(pageId === 'report') initReportForm();
+            if(pageId === 'admin') renderAdminTable();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Home Stats
+        function updateDashboardStats() {
+            const counts = { hilang: 0, titipan: 0, temuan: 0 };
+            items.forEach(i => {
+                if(i.type === 'hilang' && i.status === 'Hilang') counts.hilang++;
+                if(i.type === 'titipan' && i.status === 'Dititipkan') counts.titipan++;
+                if(i.type === 'temuan' && i.status === 'Ditemukan') counts.temuan++;
+            });
+            if(document.getElementById('count-hilang')) document.getElementById('count-hilang').innerText = counts.hilang;
+            if(document.getElementById('count-titipan')) document.getElementById('count-titipan').innerText = counts.titipan;
+            if(document.getElementById('count-temuan')) document.getElementById('count-temuan').innerText = counts.temuan;
+        }
+
+        // List Rendering
+        function renderItems() {
+            const grid = document.getElementById('items-grid');
+            if(!grid) return;
+
+            const search = document.getElementById('search-input')?.value.toLowerCase() || '';
+            const cat = document.getElementById('filter-category')?.value || 'all';
+            
+            grid.innerHTML = '';
+            const filtered = items.filter(i => {
+                const matchSearch = (i.name || '').toLowerCase().includes(search) || (i.desc || '').toLowerCase().includes(search);
+                const matchCat = cat === 'all' || i.type === cat;
+                return matchSearch && matchCat;
+            });
+
+            if(filtered.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('empty-state').classList.add('hidden');
+
+            filtered.forEach(i => {
+                const colors = {
+                    hilang: 'bg-red-50 dark:bg-red-900/10 text-smanRed border-red-100 dark:border-red-900/30',
+                    titipan: 'bg-blue-50 dark:bg-blue-900/10 text-smanBlue border-blue-100 dark:border-blue-900/30',
+                    temuan: 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700 border-yellow-100 dark:border-yellow-900/30'
+                };
+                const statusColors = {
+                    'Hilang': 'bg-red-600',
+                    'Ditemukan': 'bg-yellow-500',
+                    'Dititipkan': 'bg-blue-600',
+                    'Diambil': 'bg-green-600'
+                };
+
+                grid.insertAdjacentHTML('beforeend', `
+                    <div onclick="viewItem('${i.id}')" class="bg-white dark:bg-darkCard rounded-4xl p-7 border border-slate-100 dark:border-darkBorder shadow-sm hover:shadow-2xl hover:translate-y-[-6px] transition-all duration-300 flex flex-col h-full group cursor-pointer animate-in fade-in zoom-in duration-300">
+                        <div class="flex justify-between items-start mb-5">
+                            <span class="px-4 py-1.5 border rounded-2xl text-[10px] font-black tracking-widest uppercase ${colors[i.type]}">${i.type}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-gray-600 font-bold uppercase tracking-wider">${i.date}</span>
+                        </div>
+                        <h4 class="font-black text-slate-800 dark:text-white text-xl mb-2 tracking-tight group-hover:text-smanBlue transition-colors">${i.name}</h4>
+                        <div class="flex items-center text-xs font-bold text-slate-400 dark:text-gray-500 mb-6">
+                            <i class="fas fa-location-dot text-smanBlue mr-2"></i> ${i.location}
+                        </div>
+                        <div class="bg-slate-50 dark:bg-black/20 p-5 rounded-3xl mb-8 flex-grow border border-slate-100 dark:border-darkBorder">
+                            <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-relaxed italic line-clamp-2">"${i.desc || 'Tanpa keterangan tambahan...'}"</p>
+                        </div>
+                        <div class="flex justify-between items-end pt-5 border-t border-slate-50 dark:border-darkBorder">
+                            <div class="flex flex-col">
+                                <span class="text-[8px] text-slate-300 dark:text-gray-700 uppercase font-black tracking-widest mb-1">PIC</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-gray-400 truncate max-w-[130px]">${i.contact}</span>
+                            </div>
+                            <div class="px-4 py-2 rounded-xl text-[9px] font-black text-white uppercase tracking-widest shadow-lg ${statusColors[i.status]}">
+                                ${i.status}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        // Details Modal
+        function viewItem(id) {
+            const i = items.find(x => x.id.toString() === id.toString());
+            if(!i) return;
+
+            const modal = document.getElementById('detail-modal');
+            const container = document.getElementById('detail-container');
+            const header = document.getElementById('detail-header');
+            const badge = document.getElementById('detail-badge');
+            const statusPill = document.getElementById('detail-status-pill');
+
+            document.getElementById('detail-title').innerText = i.name;
+            document.getElementById('detail-date').innerText = i.date;
+            document.getElementById('detail-location').innerText = i.location;
+            document.getElementById('detail-desc').innerText = i.desc || "Tidak ada rincian tambahan.";
+            document.getElementById('detail-contact').innerText = i.contact;
+            
+            const themes = {
+                hilang: { bg: 'bg-smanRed', badge: 'bg-red-900/30' },
+                temuan: { bg: 'bg-smanYellow', badge: 'bg-yellow-900/30' },
+                titipan: { bg: 'bg-smanBlue', badge: 'bg-blue-900/30' }
+            };
+            const statusColors = {
+                'Hilang': 'bg-red-600',
+                'Ditemukan': 'bg-yellow-500',
+                'Dititipkan': 'bg-blue-600',
+                'Diambil': 'bg-green-600'
+            };
+
+            header.className = `p-10 text-white relative ${themes[i.type].bg}`;
+            badge.innerText = i.type;
+            badge.className = `px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase inline-block mb-4 ${themes[i.type].badge}`;
+            
+            statusPill.innerText = i.status;
+            statusPill.className = `inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black text-white uppercase tracking-wider ${statusColors[i.status]}`;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeDetail() {
+            const modal = document.getElementById('detail-modal');
+            const container = document.getElementById('detail-container');
+            modal.classList.add('opacity-0');
+            container.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // Form Submission to Apps Script
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            const originalText = btn.innerHTML;
+            
+            // UI Loading
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner"></div> <span>Mengirim...</span>`;
+
+            const fd = new FormData(e.target);
+            const type = fd.get('type');
+            
+            const payload = {
+                action: 'add',
+                type: type,
+                name: fd.get('itemName'),
+                date: fd.get('date'),
+                location: fd.get('location'),
+                desc: fd.get('description'),
+                contact: fd.get('contact'),
+                status: type === 'hilang' ? 'Hilang' : (type === 'temuan' ? 'Ditemukan' : 'Dititipkan')
+            };
+
+            try {
+                // Post to Google Apps Script
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                showSuccessNotification();
+                await fetchLatestData(); // Refresh local data
+                navigate('list');
+            } catch (error) {
+                console.error("Gagal mengirim laporan:", error);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function initReportForm() {
+            const dateInput = document.getElementById('report-date');
+            if(!dateInput) return;
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+            dateInput.max = today;
+            updateFormLabels();
+        }
+
+        function updateFormLabels() {
+            const typeEl = document.querySelector('input[name="type"]:checked');
+            if(!typeEl) return;
+            const type = typeEl.value;
+            const lbls = {
+                hilang: { n: "Barang Hilang", l: "Lokasi Terakhir Terlihat", c: "Pemilik & Kelas", h: "Lapor barang milik Anda yang hilang" },
+                titipan: { n: "Barang Titipan", l: "Lokasi Pengambilan", c: "Pengirim & Penerima", h: "Titipan luar (Orang Tua/Gojek), BUKAN barang temuan" },
+                temuan: { n: "Barang Temuan", l: "Lokasi Penemuan", c: "Penemu & Kontak", h: "Laporkan barang tak bertuan yang Anda temukan" }
+            };
+            document.getElementById('lbl-name').innerText = lbls[type].n;
+            document.getElementById('lbl-loc').innerText = lbls[type].l;
+            document.getElementById('lbl-contact').innerText = lbls[type].c;
+            document.getElementById('helper-text-container').innerHTML = `<i class="fas fa-circle-info mr-2"></i> ${lbls[type].h}`;
+        }
+
+        function showSuccessNotification() {
+            const div = document.createElement('div');
+            div.className = "fixed top-24 left-1/2 -translate-x-1/2 bg-green-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-black text-sm z-[2000] animate-bounce";
+            div.innerHTML = '<i class="fas fa-check-circle mr-2"></i> LAPORAN BERHASIL TERKIRIM';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        // Admin Auth & Functions
+        function openLoginModal() {
+            const modal = document.getElementById('login-modal');
+            const container = document.getElementById('login-container');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-90', 'opacity-0');
+            }, 10);
+            document.getElementById('admin-pass').focus();
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('login-modal');
+            const container = document.getElementById('login-container');
+            container.classList.add('scale-90', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function checkLogin() {
+            const pass = document.getElementById('admin-pass').value;
+            if(pass === 'admin123') { 
+                isAdmin = true;
+                closeLoginModal();
+                navigate('admin');
+            } else {
+                alert("Password Salah!");
+            }
+        }
+
+        function logoutAdmin() { isAdmin = false; navigate('home'); }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            items.forEach(i => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50/20 dark:hover:bg-blue-900/10 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-10 py-6">
+                        <div class="font-black text-slate-800 dark:text-white text-sm tracking-tight">${i.name}</div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${i.contact}</div>
+                    </td>
+                    <td class="px-10 py-6">
+                        <span class="text-[9px] font-black uppercase text-smanBlue bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg border border-blue-100 dark:border-blue-900/30">${i.type}</span>
+                    </td>
+                    <td class="px-10 py-6 text-center">
+                        <select onchange="updateItemStatusRemote('${i.id}', this.value)" class="text-[10px] font-black uppercase bg-slate-50 dark:bg-black/50 dark:text-gray-300 border border-slate-200 dark:border-darkBorder rounded-xl p-3 outline-none cursor-pointer">
+                            <option value="Hilang" ${i.status === 'Hilang' ? 'selected' : ''}>Hilang</option>
+                            <option value="Ditemukan" ${i.status === 'Ditemukan' ? 'selected' : ''}>Ditemukan</option>
+                            <option value="Dititipkan" ${i.status === 'Dititipkan' ? 'selected' : ''}>Dititipkan</option>
+                            <option value="Diambil" ${i.status === 'Diambil' ? 'selected' : ''}>Diambil</option>
+                        </select>
+                    </td>
+                    <td class="px-10 py-6 text-right">
+                        <button onclick="deleteItemRemote('${i.id}')" class="text-slate-200 dark:text-gray-700 hover:text-smanRed transition-all p-2 hover:scale-125"><i class="fas fa-trash-can"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateItemStatusRemote(id, newStatus) {
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus })
+                });
+                await fetchLatestData();
+            } catch (error) {
+                console.error("Gagal update status:", error);
+            }
+        }
+
+        async function deleteItemRemote(id) {
+            if(confirm("Hapus data ini dari Google Sheets?")) {
+                try {
+                    await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'delete', id: id })
+                    });
+                    await fetchLatestData();
+                    renderAdminTable();
+                } catch (error) {
+                    console.error("Gagal menghapus:", error);
+                }
+            }
+        }
+
+        // Utils
+        function handleSearch(e) { renderItems(); }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function filterNavigate(category) {
+            navigate('list');
+            setTimeout(() => {
+                const sel = document.getElementById('filter-category');
+                if(sel) { sel.value = category; renderItems(); }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
